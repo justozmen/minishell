@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipe.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
+/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 12:00:00 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/14 17:25:52 by mecavus          ###   ########.fr       */
+/*   Updated: 2025/07/17 12:58:34 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ static void	execute_piped_child(t_command *cmd_list, t_command *current,
 			close(close_cmd->output_fd);
 		close_cmd = close_cmd->next;
 	}
-	execute_command(current->args, env_list);
+	execute_command(current->args, env_list, current->input_fd);
 	clear_exit(NULL, exit_status(0, PULL), NULL);
 }
 

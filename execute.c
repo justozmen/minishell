@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
+/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 12:00:00 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/14 17:01:16 by mecavus          ###   ########.fr       */
+/*   Updated: 2025/07/17 12:58:34 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,13 +124,35 @@ static void	execute_external(char **args, t_env *env_list)
 	}
 }
 
-void	execute_command(char **args, t_env *env_list)
+void	execute_command(char **args, t_env *env_list, int input_fd)
 {
-	if (!ft_strcmp(args[0], "echo") || !ft_strcmp(args[0], "cd")
-		|| !ft_strcmp(args[0], "pwd") || !ft_strcmp(args[0], "export")
-		|| !ft_strcmp(args[0], "unset") || !ft_strcmp(args[0], "env")
-		|| !ft_strcmp(args[0], "exit"))
-		execute_builtin(args, &env_list);
+	pid_t pid;
+	int status;
+
+	pid = fork();
+	if (pid == 0)
+	{
+		if (input_fd != STDIN_FILENO)
+		{
+			dup2(input_fd, STDIN_FILENO);
+			close(input_fd);
+		}
+		// Builtin kontrolü
+		if (!ft_strcmp(args[0], "echo") || !ft_strcmp(args[0], "cd") ||
+			!ft_strcmp(args[0], "pwd") || !ft_strcmp(args[0], "export") ||
+			!ft_strcmp(args[0], "unset") || !ft_strcmp(args[0], "env") ||
+			!ft_strcmp(args[0], "exit"))
+			execute_builtin(args, &env_list);
+		else
+			execute_external(args, env_list);
+		exit(0);
+	}
 	else
-		execute_external(args, env_list);
+		waitpid(pid, &status, 0);
 }
+
+/*******************************************************************************************************/
+// export AKF="ho -n" calısıyor,
+// ardından export CVS=$AKF => hatalı: CVS = ho atanıyor ama -n ayrılıyor içeri almıyor hata veriyor.
+/*******************************************************************************************************/
+//

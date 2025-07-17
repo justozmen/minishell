@@ -6,7 +6,7 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/04 12:25:10 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/15 12:48:21 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/17 12:58:34 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,19 +46,19 @@ typedef enum e_tokentype
 	APPEND,
 	EXPAND,
 	D_QUOT,
-	S_QUOT,
-}	t_tokentype;
+	S_QUOT
+} t_tokentype;
 
 typedef struct s_token
 {
 	struct s_token	*next;
 	struct s_token	*prev;
-	t_tokentype		type;
-	char			*value;
-	int				fd_rdir;
-	int				is_removed;
-	int				is_invalid_redir;
-}	t_token;
+	t_tokentype	type;
+	char		*value;
+	int			fd_rdir;
+	int			is_removed;
+	int			is_invalid_redir;
+} t_token;
 
 typedef struct s_garbage
 {
@@ -75,12 +75,12 @@ typedef struct s_env {
 
 typedef struct s_command
 {
-	char				*command;
-	char				**args;
-	int					input_fd;
-	int					output_fd;
+	char			*command;
+	char			**args;
+	int				input_fd;
+	int				output_fd;
 	struct s_command	*next;
-}	t_command;
+} t_command;
 
 typedef struct s_main
 {
@@ -137,7 +137,7 @@ int			needs_word_splitting(char *expanded_value);
 void		handle_word_splitting(t_token *current, char *expanded_value);
 
 t_command	*parse_tokens_to_commands(t_token *tokens);
-void		execute_command(char **args, t_env *env_list);
+void		execute_command(char **args, t_env *env_list, int input_fd);
 void		execute_piped_commands(t_command *cmd_list, t_env *env_list);
 
 int			check_syntax(char *s);
@@ -149,5 +149,6 @@ void		builtin_env(t_env *env_list);
 void		builtin_export(char **args, t_env **env_list);
 void		builtin_unset(char **args, t_env **env_list);
 void		builtin_exit(char **args);
+int			read_heredoc(const char *delimiter);
 
 #endif

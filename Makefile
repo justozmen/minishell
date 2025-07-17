@@ -14,7 +14,8 @@ SRC = main.c \
       signal.c \
       syntax.c \
       token.c \
-      word_split.c
+      word_split.c \
+      heredoc.c
 
 BUILTIN_SRC = builtin/builtin_cd.c \
               builtin/builtin_echo.c \

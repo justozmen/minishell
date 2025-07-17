@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
+/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/04 12:29:43 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/14 16:54:14 by mecavus          ###   ########.fr       */
+/*   Updated: 2025/07/17 12:58:34 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,7 @@ static void	check_exit(char *input, t_main *shell)
 
 static void	check_ac(int ac)
 {
+	return ;
 	if (ac > 1)
 	{
 		clear_exit(NULL, 127, "no arguments please");
@@ -86,11 +87,14 @@ int	main(int ac, char **av, char **env)
 		if (!shell.tkn_list)
 			continue ;
 		free(shell.input);
+//print_token_list(shell.tkn_list);
 		solve_expansion(shell.tkn_list, shell.env_list);
+//print_token_list(shell.tkn_list);
 		shell.cmd_list = parse_tokens_to_commands(shell.tkn_list);
 		if (shell.cmd_list && !shell.cmd_list->next)
-			execute_command(shell.cmd_list->args, shell.env_list);
+			execute_command(shell.cmd_list->args, shell.env_list, shell.cmd_list->input_fd);
 		else if (shell.cmd_list)
 			execute_piped_commands(shell.cmd_list, shell.env_list);
 	}
 }
+// "[]"export PREFIX="test_"; echo ${PREFIX}file ve "export PREFIX="test_"; echo ${PREFIX}file" inputu double free veriyor
