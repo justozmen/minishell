@@ -3,95 +3,43 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
+/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 12:00:00 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/17 12:58:34 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/21 17:39:32 by mecavus          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static int	count_word_tokens(t_token *tokens)
-{
-	int		count;
-	t_token	*current;
-
-	count = 0;
-	current = tokens;
-	while (current && current->type != PIPE)
-	{
-		if (current->type == WORD && current->is_removed == 0)
-			count++;
-		current = current->next;
-	}
-	return (count);
-}
-
-static t_command	*create_command(void)
+static t_command	*process_single_command(t_token *current_tkn,
+				t_env *env_list)
 {
 	t_command	*cmd;
+	t_token		*start_tkn;
+	int			ac;
 
-	cmd = ft_malloc(sizeof(t_command), ALLOC);
-	cmd->command = NULL;
-	cmd->args = NULL;
-	cmd->input_fd = STDIN_FILENO;
-	cmd->output_fd = STDOUT_FILENO;
-	cmd->next = NULL;
+	cmd = create_command();
+	start_tkn = current_tkn;
+	handle_redirections(current_tkn, cmd, env_list);
+	ac = count_word_tokens(start_tkn);
+	if (ac > 0)
+		populate_command_args(cmd, start_tkn, ac);
 	return (cmd);
 }
 
-static void	add_command(t_command **cmd_list, t_command *new_cmd)
+t_command	*parse_tkn_to_cmds(t_token *tokens, t_env *env_list)
 {
-	t_command	*current;
-
-	if (!*cmd_list)
-	{
-		*cmd_list = new_cmd;
-		return ;
-	}
-	current = *cmd_list;
-	while (current->next)
-		current = current->next;
-	current->next = new_cmd;
-}
-
-t_command	*parse_tokens_to_commands(t_token *tokens)
-{
-	t_command *cmd_list;
-	t_command *current_cmd;
-	t_token *current_tkn;
-	int ac;
-	int i;
+	t_command	*cmd_list;
+	t_command	*current_cmd;
+	t_token		*current_tkn;
 
 	cmd_list = NULL;
 	current_tkn = tokens;
 	while (current_tkn)
 	{
-		current_cmd = create_command();
-		ac = count_word_tokens(current_tkn);
-		if (ac > 0)
-		{
-			current_cmd->args = ft_malloc(sizeof(char *) * (ac + 1), ALLOC);
-			i = 0;
-			while (current_tkn && current_tkn->type != PIPE)
-			{
-				if (current_tkn->type == HERDOC && current_tkn->next && current_tkn->next->type == HERKEY)
-				{
-					if (current_cmd->input_fd == STDIN_FILENO)
-						current_cmd->input_fd = read_heredoc(current_tkn->next->value);
-					current_tkn = current_tkn->next;
-				}
-				else if (current_tkn->type == WORD && current_tkn->is_removed == 0 && i < ac)
-				{
-					current_cmd->args[i++] = ft_strdup(current_tkn->value);
-					if (!current_cmd->command)
-						current_cmd->command = ft_strdup(current_tkn->value);
-				}
-				current_tkn = current_tkn->next;
-			}
-			current_cmd->args[i] = NULL;
-		}
+		current_cmd = process_single_command(current_tkn, env_list);
+		current_tkn = skip_to_next_pipe(current_tkn);
 		add_command(&cmd_list, current_cmd);
 		if (current_tkn && current_tkn->type == PIPE)
 			current_tkn = current_tkn->next;

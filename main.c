@@ -6,7 +6,7 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/04 12:29:43 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/17 12:58:34 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/21 20:43:39 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,14 +87,22 @@ int	main(int ac, char **av, char **env)
 		if (!shell.tkn_list)
 			continue ;
 		free(shell.input);
-//print_token_list(shell.tkn_list);
 		solve_expansion(shell.tkn_list, shell.env_list);
-//print_token_list(shell.tkn_list);
-		shell.cmd_list = parse_tokens_to_commands(shell.tkn_list);
-		if (shell.cmd_list && !shell.cmd_list->next)
-			execute_command(shell.cmd_list->args, shell.env_list, shell.cmd_list->input_fd);
+		shell.cmd_list = parse_tkn_to_cmds(shell.tkn_list, shell.env_list);
+		if (g_heredoc_interrupted)
+		{
+			g_heredoc_interrupted = 0;
+			continue;
+		}
+		if (shell.cmd_list && shell.cmd_list->args && !shell.cmd_list->next)
+			execute_command(shell.cmd_list, &shell.env_list);
 		else if (shell.cmd_list)
 			execute_piped_commands(shell.cmd_list, shell.env_list);
 	}
 }
-// "[]"export PREFIX="test_"; echo ${PREFIX}file ve "export PREFIX="test_"; echo ${PREFIX}file" inputu double free veriyor
+
+// cat << eof sinyal yakalayamiyor
+// flagler alınmayacak builtin -n hariç
+// exit 9999999999999999999
+// ctr c
+// env _

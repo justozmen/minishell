@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
+/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 12:00:00 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/17 12:58:34 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/21 16:10:10 by mecavus          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-static void	execute_builtin(char **args, t_env **env_list)
+void	execute_builtin(char **args, t_env **env_list)
 {
 	if (!ft_strcmp(args[0], "echo"))
 		builtin_echo(args);
@@ -32,127 +32,54 @@ static void	execute_builtin(char **args, t_env **env_list)
 		builtin_exit(args);
 }
 
-static char	*find_command_path(char *command, t_env *env_list)
+int	is_builtin(char *command)
 {
-	char	**paths;
-	char	*path_env;
-	char	*full_path;
-	char	*temp;
-	int		i;
-	int		j;
-
-	if (ft_strchr(command, '/'))
-		return (ft_strdup(command));
-	path_env = get_env_value(env_list, "PATH");
-	if (!path_env)
-		return (NULL);
-	paths = ft_split_sep(path_env, ':');
-	i = 0;
-	while (paths[i])
-	{
-		temp = ft_strjoin(paths[i], "/");
-		full_path = ft_strjoin(temp, command);
-		temp = NULL;
-		if (access(full_path, X_OK) == 0)
-		{
-			j = 0;
-			while (paths[j])
-				paths[j++] = NULL;
-			paths = NULL;
-			return (full_path);
-		}
-		full_path = NULL;
-		i++;
-	}
-	i = 0;
-	while (paths[i])
-		paths[i++] = NULL;
-	paths = NULL;
-	return (NULL);
+	if (!ft_strcmp(command, "echo") || !ft_strcmp(command, "cd")
+		|| !ft_strcmp(command, "pwd") || !ft_strcmp(command, "export")
+		|| !ft_strcmp(command, "unset") || !ft_strcmp(command, "env")
+		|| !ft_strcmp(command, "exit"))
+		return (1);
+	return (0);
 }
 
-static void	free_env_array(char **env_array)
+static void	setup_redirections(t_command *cmd, int *saved_stdin,
+	int *saved_stdout)
 {
-	int	i;
+	*saved_stdin = dup(STDIN_FILENO);
+	*saved_stdout = dup(STDOUT_FILENO);
+	if (cmd->input_fd != STDIN_FILENO)
+	{
+		dup2(cmd->input_fd, STDIN_FILENO);
+		close(cmd->input_fd);
+	}
+	if (cmd->output_fd != STDOUT_FILENO)
+	{
+		dup2(cmd->output_fd, STDOUT_FILENO);
+		close(cmd->output_fd);
+	}
+}
 
-	if (!env_array)
+static void	restore_redirections(int saved_stdin, int saved_stdout)
+{
+	dup2(saved_stdin, STDIN_FILENO);
+	dup2(saved_stdout, STDOUT_FILENO);
+	close(saved_stdin);
+	close(saved_stdout);
+}
+
+void	execute_command(t_command *cmd, t_env **env_list)
+{
+	int	saved_stdin;
+	int	saved_stdout;
+
+	if (!cmd || !cmd->args || !cmd->args[0])
 		return ;
-	i = 0;
-	while (env_array[i])
-	{
-		env_array[i] = NULL;
-		i++;
-	}
-	env_array = NULL;
-}
-
-static void	execute_external(char **args, t_env *env_list)
-{
-	pid_t	pid;
-	char	**env_array;
-	char	*cmd_path;
-	int		status;
-
-	cmd_path = find_command_path(args[0], env_list);
-	if (!cmd_path)
-	{
-		ft_putstr_fd("minishell: command not found: ", 2);
-		ft_putstr_fd(args[0], 2);
-		ft_putstr_fd("\n", 2);
-		exit_status(127, PUSH);
+	if (cmd->redirect_failed)
 		return ;
-	}
-	env_array = env_list_to_array(env_list);
-	pid = fork();
-	if (pid == 0)
-	{
-		if (execve(cmd_path, args, env_array) == -1)
-		{
-			perror("minishell");
-			cmd_path = NULL;
-			free_env_array(env_array);
-			clear_exit(NULL, 126, NULL);
-		}
-	}
-	else if (pid > 0)
-	{
-		cmd_path = NULL;
-		free_env_array(env_array);
-		waitpid(pid, &status, 0);
-		if (WIFEXITED(status))
-			exit_status(WEXITSTATUS(status), PUSH);
-	}
-}
-
-void	execute_command(char **args, t_env *env_list, int input_fd)
-{
-	pid_t pid;
-	int status;
-
-	pid = fork();
-	if (pid == 0)
-	{
-		if (input_fd != STDIN_FILENO)
-		{
-			dup2(input_fd, STDIN_FILENO);
-			close(input_fd);
-		}
-		// Builtin kontrolü
-		if (!ft_strcmp(args[0], "echo") || !ft_strcmp(args[0], "cd") ||
-			!ft_strcmp(args[0], "pwd") || !ft_strcmp(args[0], "export") ||
-			!ft_strcmp(args[0], "unset") || !ft_strcmp(args[0], "env") ||
-			!ft_strcmp(args[0], "exit"))
-			execute_builtin(args, &env_list);
-		else
-			execute_external(args, env_list);
-		exit(0);
-	}
+	setup_redirections(cmd, &saved_stdin, &saved_stdout);
+	if (is_builtin(cmd->args[0]))
+		execute_builtin(cmd->args, env_list);
 	else
-		waitpid(pid, &status, 0);
+		execute_external(cmd->args, *env_list);
+	restore_redirections(saved_stdin, saved_stdout);
 }
-
-/*******************************************************************************************************/
-// export AKF="ho -n" calısıyor,
-// ardından export CVS=$AKF => hatalı: CVS = ho atanıyor ama -n ayrılıyor içeri almıyor hata veriyor.
-/*******************************************************************************************************/
-//

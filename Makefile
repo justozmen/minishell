@@ -6,16 +6,30 @@ NAME = minishell
 SRC = main.c \
       env_utils.c \
       execute.c \
+      execute_utils.c \
+      execute_external.c \
       expand_variable.c \
       expansion.c \
+      expansion_utils.c \
+      expansion_utils2.c \
+      expansion_tokens.c \
       garbage.c \
+      garbage_utils.c \
+      garbage_list.c \
+      heredoc_signal.c \
+      heredoc_utils.c \
+      heredoc_expand.c \
+      heredoc_writer.c \
       parser.c \
+      parser_utils.c \
+      parser_redirections.c \
       pipe.c \
+      pipe_utils.c \
       signal.c \
       syntax.c \
+      token_utils.c \
       token.c \
-      word_split.c \
-      heredoc.c
+      word_split.c
 
 BUILTIN_SRC = builtin/builtin_cd.c \
               builtin/builtin_echo.c \

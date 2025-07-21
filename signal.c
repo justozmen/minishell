@@ -6,7 +6,7 @@
 /*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/04 12:50:30 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/14 16:31:47 by mecavus          ###   ########.fr       */
+/*   Updated: 2025/07/21 11:34:25 by mecavus          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,13 @@ int	exit_status(int status, int flag)
 
 static void	handler(int sig)
 {
+	if (g_heredoc_interrupted)
+		return ;
 	(void)sig;
-	rl_on_new_line();
 	ft_putstr_fd("\n", 1);
-	rl_redisplay();
 	rl_replace_line("", 1);
+	rl_on_new_line();
+	rl_redisplay();
 	exit_status(130, PUSH);
 }
 
@@ -41,4 +43,16 @@ void	init_signal(void)
 {
 	signal(SIGQUIT, SIG_IGN);
 	signal(SIGINT, &handler);
+}
+
+void	ignore_signal(void)
+{
+	signal(SIGQUIT, SIG_IGN);
+	signal(SIGINT, SIG_IGN);
+}
+
+void	execve_signal(void)
+{
+	signal(SIGQUIT, SIG_DFL);
+	signal(SIGINT, SIG_DFL);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
+/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/04 12:25:10 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/17 12:58:34 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/21 17:44:02 by mecavus          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,9 +22,9 @@
 # include <sys/stat.h>
 # include <fcntl.h>
 # include <errno.h>
-# include <string.h>
 # include <readline/readline.h>
 # include <readline/history.h>
+# include <limits.h>
 
 # define ALLOC 0
 # define CLEAR 1
@@ -33,6 +33,9 @@
 
 # define PUSH 0
 # define PULL 1
+
+# define START 0
+# define END 1
 
 typedef enum e_tokentype
 {
@@ -46,25 +49,24 @@ typedef enum e_tokentype
 	APPEND,
 	EXPAND,
 	D_QUOT,
-	S_QUOT
-} t_tokentype;
+	S_QUOT,
+}	t_tokentype;
 
 typedef struct s_token
 {
 	struct s_token	*next;
 	struct s_token	*prev;
-	t_tokentype	type;
-	char		*value;
-	int			fd_rdir;
-	int			is_removed;
-	int			is_invalid_redir;
-} t_token;
+	t_tokentype		type;
+	char			*value;
+	int				fd_rdir;
+	int				is_removed;
+	int				is_invalid_redir;
+}	t_token;
 
 typedef struct s_garbage
 {
 	void				*address;
 	struct s_garbage	*next;
-
 }	t_garbage;
 
 typedef struct s_env {
@@ -75,12 +77,13 @@ typedef struct s_env {
 
 typedef struct s_command
 {
-	char			*command;
-	char			**args;
-	int				input_fd;
-	int				output_fd;
+	char				*command;
+	char				**args;
+	int					input_fd;
+	int					output_fd;
+	int					redirect_failed;
 	struct s_command	*next;
-} t_command;
+}	t_command;
 
 typedef struct s_main
 {
@@ -114,18 +117,31 @@ char		*ft_strtrim(char *s, char c);
 void		*ft_malloc(size_t size, int flag);
 void		clear_pointers(t_main *shell);
 void		clear_exit(t_main *shell, int exit_code, char *message);
+t_garbage	*lstlast_garbage(t_garbage *lst);
+void		add_garbage(t_garbage **lst, t_garbage *new);
+t_garbage	*new_garbage(void *adress);
+void		clear_it(t_garbage *garbage);
+void		clear_command_list(t_main *shell);
 
 t_env		*lst_new(char *key, char *value);
 void		lst_addback(t_env **lst, t_env *new);
 t_env		*init_env_list(char **env);
 char		**env_list_to_array(t_env *env_list);
 char		*get_env_value(t_env *env, const char *varname);
+char		*remove_quotes(const char *value, t_tokentype type);
+char		*expand_assignment(const char *value, t_env *env, int *was_quoted);
+int			is_assignment(const char *value);
+char		*process_mixed_content(const char *value, t_env *env,
+				int *was_quoted);
+void		process_token_expansion(t_token *current, t_env *env);
 
 void		init_signal(void);
+void		ignore_signal(void);
+void		execve_signal(void);
 int			exit_status(int status, int flag);
 
+t_tokentype	identify_token_type(char *str,	t_token *last);
 t_token		*tokenize_input(char *input);
-char		**tokens_to_args(t_token *tokens);
 
 void		solve_expansion(t_token *list, t_env *env);
 char		*handle_exit_status(char *result, int *i);
@@ -136,9 +152,35 @@ char		*append_char(char *result, const char *value, int *i);
 int			needs_word_splitting(char *expanded_value);
 void		handle_word_splitting(t_token *current, char *expanded_value);
 
-t_command	*parse_tokens_to_commands(t_token *tokens);
-void		execute_command(char **args, t_env *env_list, int input_fd);
+t_command	*parse_tkn_to_cmds(t_token *tokens, t_env *env_list);
+int			count_word_tokens(t_token *tokens);
+t_command	*create_command(void);
+void		add_command(t_command **cmd_list, t_command *new_cmd);
+void		populate_command_args(t_command *cmd, t_token *start_tkn, int ac);
+t_token		*skip_to_next_pipe(t_token *current_tkn);
+void		handle_input_redirection(t_token *current, t_command *cmd);
+void		handle_output_redirection(t_token *current, t_command *cmd);
+void		handle_append_redirection(t_token *current, t_command *cmd);
+void		handle_heredoc_redirection(t_token *current, t_command *cmd,
+				t_env *env_list);
+void		handle_redirections(t_token *current, t_command *cmd,
+				t_env *env_list);
+void		execute_builtin(char **args, t_env **env_list);
+void		execute_command(t_command *cmd, t_env **env_list);
+void		execute_external(char **args, t_env *env_list);
+void		execute_external_piped(char **args, t_env *env_list);
 void		execute_piped_commands(t_command *cmd_list, t_env *env_list);
+int			count_commands(t_command *cmd_list);
+void		fork_all_processes(t_command *cmd_list, pid_t *pids,
+				t_env *env_list);
+void		close_all_pipes(t_command *cmd_list);
+void		wait_all_processes(pid_t *pids, int cmd_count);
+void		execute_piped_child(t_command *cmd_list, t_command *current,
+				t_env *env_list);
+char		*find_command_path(char *command, t_env *env_list);
+void		free_env_array(char **env_array);
+void		wait_and_handle_status(pid_t pid);
+int			is_builtin(char *command);
 
 int			check_syntax(char *s);
 
@@ -149,6 +191,17 @@ void		builtin_env(t_env *env_list);
 void		builtin_export(char **args, t_env **env_list);
 void		builtin_unset(char **args, t_env **env_list);
 void		builtin_exit(char **args);
-int			read_heredoc(const char *delimiter);
+
+int			handle_heredoc(t_token *current, t_env *env_list);
+char		*process_heredoc_delimiter(char *delimiter);
+void		heredoc_signal_handler(int sig);
+void		init_heredoc_signal(void);
+int			should_expand_heredoc(char *original_delimiter);
+char		*create_temp_filename(void);
+char		*expand_heredoc_line(char *line, t_env *env_list);
+int			write_heredoc_to_file(char *filename, char *delimiter,
+				t_env *env_list, int expand);
+
+extern int	g_heredoc_interrupted;
 
 #endif

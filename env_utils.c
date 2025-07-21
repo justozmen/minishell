@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   env_utils.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
+/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/07 14:25:00 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/15 13:40:32 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/21 15:59:13 by mecavus          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,8 @@ t_env	*init_env_list(char **env)
 	t_env	*env_list;
 	char	*key;
 	char	*value;
+	int		flag;
+	int		shlvl;
 
 	env_list = NULL;
 	if (!env || !*env)
@@ -57,10 +59,14 @@ t_env	*init_env_list(char **env)
 	while (env && *env)
 	{
 		parse_env_entry(*env, &key, &value);
-		env++;
-		if (strcmp(key, "SHLVL") == 0)
-			*value += 1;
+		if (ft_strcmp(key, "SHLVL") == 0 && value)
+		{
+			flag = 0;
+			shlvl = ft_atoi(value, &flag) + 1;
+			value = ft_itoa(shlvl);
+		}
 		lst_addback(&env_list, lst_new(key, value));
+		env++;
 	}
 	return (env_list);
 }
@@ -93,11 +99,7 @@ char	**env_list_to_array(t_env *env_list)
 		if (env_list->value)
 		{
 			temp = ft_strjoin(env_list->key, "=");
-			if (env_list->value)
-				env_array[i] = ft_strjoin(temp, env_list->value);
-			else
-				env_array[i] = ft_strjoin(temp, "");
-			temp = NULL;
+			env_array[i] = ft_strjoin(temp, env_list->value);
 			i++;
 		}
 		env_list = env_list->next;
