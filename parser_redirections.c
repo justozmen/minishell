@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   parser_redirections.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
+/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 15:50:00 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/21 20:10:51 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/21 18:59:07 by mecavus          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	handle_input_redirection(t_token *current, t_command *cmd)
+static void	handle_input_redirection(t_token *current, t_command *cmd)
 {
 	int	fd;
 
@@ -34,7 +34,7 @@ void	handle_input_redirection(t_token *current, t_command *cmd)
 	current->is_removed = 1;
 }
 
-void	handle_output_redirection(t_token *current, t_command *cmd)
+static void	handle_output_redirection(t_token *current, t_command *cmd)
 {
 	int	fd;
 
@@ -56,7 +56,7 @@ void	handle_output_redirection(t_token *current, t_command *cmd)
 	current->is_removed = 1;
 }
 
-void	handle_append_redirection(t_token *current, t_command *cmd)
+static void	handle_append_redirection(t_token *current, t_command *cmd)
 {
 	int	fd;
 
@@ -78,7 +78,7 @@ void	handle_append_redirection(t_token *current, t_command *cmd)
 	current->is_removed = 1;
 }
 
-void	handle_heredoc_redirection(t_token *current, t_command *cmd,
+static void	handle_heredoc_redirection(t_token *current, t_command *cmd,
 				t_env *env_list)
 {
 	int	fd;

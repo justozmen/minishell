@@ -6,27 +6,11 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 16:23:07 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/21 20:41:10 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/22 13:57:01 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-
-static int	process_heredoc_line(int fd, char *line, t_env *env_list,
-				int expand)
-{
-	char	*expanded_line;
-
-	if (expand)
-	{
-		expanded_line = expand_heredoc_line(line, env_list);
-		write(fd, expanded_line, ft_strlen(expanded_line));
-	}
-	else
-		write(fd, line, ft_strlen(line));
-	write(fd, "\n", 1);
-	return (0);
-}
 
 static int	handle_heredoc_input(int fd, char *processed_delimiter,
 				t_env *env_list, int expand)
@@ -39,9 +23,7 @@ static int	handle_heredoc_input(int fd, char *processed_delimiter,
 		if (!line || g_heredoc_interrupted)
 		{
 			if (g_heredoc_interrupted)
-			{
-				_exit(130);
-			}
+				exit(130);
 			break ;
 		}
 		if (ft_strcmp(line, processed_delimiter) == 0)
@@ -55,14 +37,49 @@ static int	handle_heredoc_input(int fd, char *processed_delimiter,
 	return (0);
 }
 
+static void	write_heredoc_child(int fd, char *processed_delimiter,
+				t_env *env_list, int expand)
+{
+	int	result;
+
+	init_heredoc_signal();
+	result = handle_heredoc_input(fd, processed_delimiter, env_list, expand);
+	close(fd);
+	if (result == -1)
+		exit(130);
+	else
+		exit(0);
+}
+
+static int	write_heredoc_parent(pid_t pid, int fd, char *filename)
+{
+	int	status;
+
+	signal(SIGINT, SIG_IGN);
+	close(fd);
+	waitpid(pid, &status, 0);
+	init_signal();
+	if (WIFSIGNALED(status) && WTERMSIG(status) == SIGINT)
+	{
+		unlink(filename);
+		g_heredoc_interrupted = 1;
+		return (-1);
+	}
+	if (WIFEXITED(status) && WEXITSTATUS(status) == 130)
+	{
+		unlink(filename);
+		g_heredoc_interrupted = 1;
+		return (-1);
+	}
+	return (0);
+}
+
 int	write_heredoc_to_file(char *filename, char *delimiter,
 			t_env *env_list, int expand)
 {
 	int		fd;
 	char	*processed_delimiter;
-	int		result;
 	pid_t	pid;
-	int		status;
 
 	fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
 	if (fd == -1)
@@ -70,37 +87,11 @@ int	write_heredoc_to_file(char *filename, char *delimiter,
 	processed_delimiter = process_heredoc_delimiter(delimiter);
 	pid = fork();
 	if (pid == 0)
-	{
-		init_heredoc_signal();
-		result = handle_heredoc_input(fd, processed_delimiter, env_list, expand);
-		close(fd);
-		_exit(result == -1 ? 130 : 0);
-	}
+		write_heredoc_child(fd, processed_delimiter, env_list, expand);
 	else if (pid > 0)
-	{
-		signal(SIGINT, SIG_IGN);
-		close(fd);
-		waitpid(pid, &status, 0);
-		init_signal();
-		if (WIFSIGNALED(status) && WTERMSIG(status) == SIGINT)
-		{
-			unlink(filename);
-			g_heredoc_interrupted = 1;
-			return (-1);
-		}
-		if (WIFEXITED(status) && WEXITSTATUS(status) == 130)
-		{
-			unlink(filename);
-			g_heredoc_interrupted = 1;
-			return (-1);
-		}
-	}
-	else
-	{
-		close(fd);
-		return (-1);
-	}
-	return (0);
+		return (write_heredoc_parent(pid, fd, filename));
+	close(fd);
+	return (-1);
 }
 
 int	handle_heredoc(t_token *current, t_env *env_list)
