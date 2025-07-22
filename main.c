@@ -6,7 +6,7 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/04 12:29:43 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/22 18:04:16 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/22 19:22:04 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,3 +96,7 @@ int	main(int ac, char **av, char **env)
 			execute_piped_commands(shell.cmd_list, shell.env_list);
 	}
 }
+//echo "Test '"|"cat" -> Test '
+//"e"'c'"h"'o' a -> " a" olmayacak a olacak boşluksuz
+//exit a 5 -> numeric argument required
+//exit "                        5             " -> 5 olarak çıkış yapması gerek
