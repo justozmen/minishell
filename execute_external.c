@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   execute_utils_2.c                                  :+:      :+:    :+:   */
+/*   execute_external.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
+/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 12:36:36 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/21 12:41:20 by mecavus          ###   ########.fr       */
+/*   Updated: 2025/07/22 18:00:58 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,6 @@ static void	handle_child_process(char **args, char *cmd_path, char **env_array)
 	{
 		perror("minishell");
 		cmd_path = NULL;
-		free_env_array(env_array);
 		clear_exit(NULL, 126, NULL);
 	}
 }
@@ -73,7 +72,6 @@ void	execute_external(char **args, t_env *env_list)
 	else if (pid > 0)
 	{
 		cmd_path = NULL;
-		free_env_array(env_array);
 		wait_and_handle_status(pid);
 	}
 }
