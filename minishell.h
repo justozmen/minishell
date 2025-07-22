@@ -6,7 +6,7 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/04 12:25:10 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/22 14:38:39 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/22 15:07:37 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,7 +199,7 @@ void		init_heredoc_signal(void);
 int			should_expand_heredoc(char *original_delimiter);
 char		*create_temp_filename(void);
 char		*expand_heredoc_line(char *line, t_env *env_list);
-int			write_heredoc_to_file(char *filename, char *delimiter,
+int			process_heredoc_line(int fd, char *line,
 				t_env *env_list, int expand);
 
 extern int	g_heredoc_interrupted;
