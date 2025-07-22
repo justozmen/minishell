@@ -6,11 +6,37 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 16:23:07 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/22 12:54:34 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/22 14:39:35 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
+
+int	write_heredoc_to_file(char *filename, char *delimiter,
+			t_env *env_list, int expand)
+{
+	int		fd;
+	char	*processed_delimiter;
+	pid_t	pid;
+
+	fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+	if (fd == -1)
+		return (-1);
+	processed_delimiter = process_heredoc_delimiter(delimiter);
+	pid = fork();
+	if (pid == 0)
+		write_heredoc_child(fd, processed_delimiter, env_list, expand);
+	else if (pid > 0)
+		return (write_heredoc_parent(pid, fd, filename));
+	close(fd);
+	return (-1);
+}
+typedef struct s_delimiter_state
+{
+	int	s_quot;
+	int	d_quot;
+	int	i;
+}	t_delimiter_state;
 
 static char	*handle_quote_in_delimiter(char *result, char *delimiter,
 				t_delimiter_state *state)
@@ -85,20 +111,4 @@ char	*create_temp_filename(void)
 	temp = ft_strjoin("/tmp/minishell_heredoc_", num_str);
 	filename = ft_strjoin(temp, ".tmp");
 	return (filename);
-}
-
-int	process_heredoc_line(int fd, char *line,
-				t_env *env_list, int expand)
-{
-	char	*expanded_line;
-
-	if (expand)
-	{
-		expanded_line = expand_heredoc_line(line, env_list);
-		write(fd, expanded_line, ft_strlen(expanded_line));
-	}
-	else
-		write(fd, line, ft_strlen(line));
-	write(fd, "\n", 1);
-	return (0);
 }

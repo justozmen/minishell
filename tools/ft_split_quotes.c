@@ -6,44 +6,55 @@
 /*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 12:47:41 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/21 20:39:07 by mecavus          ###   ########.fr       */
+/*   Updated: 2025/07/21 15:43:34 by mecavus          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-void	skip_word(const char **s)
+static int	handle_quote(const char *s, int len, char *quote, int flag)
 {
-	int	len;
-	int	op_len;
-
-	op_len = is_shell_operator(*s, 0);
-	if (op_len > 0)
-		*s += op_len;
+	if (flag == START)
+	{
+		*quote = s[len];
+		return (len + 1);
+	}
 	else
 	{
-		len = word_len(*s);
-		*s += len;
+		*quote = 0;
+		len++;
+		if (s[len] && !ft_is_space(s[len]))
+			return (len);
+		else
+			return (-1);
 	}
 }
 
-void	add_word_to_result(char **result, int *i, const char **s)
+static int	word_len(const char *s)
 {
-	int	len;
-	int	op_len;
+	int		len;
+	char	quote;
+	int		result;
 
-	op_len = is_shell_operator(*s, 0);
-	if (op_len > 0)
+	len = 0;
+	quote = 0;
+	while (s[len])
 	{
-		result[(*i)++] = extract_word(*s, op_len);
-		*s += op_len;
+		if (!quote && (s[len] == '\'' || s[len] == '\"'))
+			len = handle_quote(s, len, &quote, START);
+		else if (quote && s[len] == quote)
+		{
+			result = handle_quote(s, len, &quote, END);
+			if (result == -1)
+				break ;
+			len = result;
+		}
+		else if (!quote && ft_is_space(s[len]))
+			break ;
+		else
+			len++;
 	}
-	else
-	{
-		len = word_len(*s);
-		result[(*i)++] = extract_word(*s, len);
-		*s += len;
-	}
+	return (len);
 }
 
 static int	count_words(const char *s)
@@ -58,36 +69,49 @@ static int	count_words(const char *s)
 		if (*s)
 		{
 			count++;
-			if (!*s)
-				break ;
-			skip_word(&s);
+			s += word_len(s);
 		}
 	}
 	return (count);
 }
 
-static char	**fill_result_array(const char *s, int word_count)
+static char	*extract_word(const char *s, int len)
 {
-	char	**result;
+	char	*word;
 	int		i;
 
 	i = 0;
+	word = ft_malloc(len + 1, ALLOC);
+	while (i < len)
+	{
+		word[i] = s[i];
+		i++;
+	}
+	word[i] = '\0';
+	return (word);
+}
+
+char	**split_with_quotes(const char *s)
+{
+	int		i;
+	int		word_count;
+	char	**result;
+	int		len;
+
+	i = 0;
+	word_count = count_words(s);
 	result = ft_malloc(sizeof(char *) * (word_count + 1), ALLOC);
 	while (*s)
 	{
 		while (ft_is_space(*s))
 			s++;
 		if (*s)
-			add_word_to_result(result, &i, &s);
+		{
+			len = word_len(s);
+			result[i++] = extract_word(s, len);
+			s += len;
+		}
 	}
 	result[i] = NULL;
 	return (result);
-}
-
-char	**split_with_quotes(const char *s)
-{
-	int		word_count;
-
-	word_count = count_words(s);
-	return (fill_result_array(s, word_count));
 }
