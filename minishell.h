@@ -6,7 +6,7 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/04 12:25:10 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/23 13:15:58 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/23 18:09:45 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -221,7 +221,8 @@ int			process_heredoc_line(int fd, char *line,
 				t_env *env_list, int expand);
 t_token		*skip_to_next_pipe(t_token *current_tkn);
 void		heredoc_putstr(char *s);
-
+void		wait_and_handle_status(pid_t pid);
+void		handle_signal_status(int status);
 extern int	g_heredoc_interrupted;
 
 #endif

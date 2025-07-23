@@ -6,13 +6,40 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 12:18:35 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/22 17:58:18 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/23 18:08:49 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 #include <sys/types.h>
 #include <sys/wait.h>
+
+void	handle_signal_status(int status)
+{
+	if (WTERMSIG(status) == SIGINT)
+	{
+		ft_putstr_fd("\n", 1);
+		exit_status(130, PUSH);
+	}
+	else if (WTERMSIG(status) == SIGQUIT)
+	{
+		ft_putstr_fd("Quit (core dumped)\n", 1);
+		exit_status(131, PUSH);
+	}
+}
+
+void	wait_and_handle_status(pid_t pid)
+{
+	int	status;
+
+	ignore_signal();
+	waitpid(pid, &status, 0);
+	if (WIFEXITED(status))
+		exit_status(WEXITSTATUS(status), PUSH);
+	else if (WIFSIGNALED(status))
+		handle_signal_status(status);
+	init_signal();
+}
 
 static void	free_paths(char **paths)
 {

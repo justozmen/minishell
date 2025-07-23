@@ -3,50 +3,57 @@
 /*                                                        :::      ::::::::   */
 /*   execute_external.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
+/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 12:36:36 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/22 20:08:48 by mecavus          ###   ########.fr       */
+/*   Updated: 2025/07/23 18:09:05 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static void	handle_signal_status(int status)
+static int	is_script_file(char *path)
 {
-	if (WTERMSIG(status) == SIGINT)
-	{
-		ft_putstr_fd("\n", 1);
-		exit_status(130, PUSH);
-	}
-	else if (WTERMSIG(status) == SIGQUIT)
-	{
-		ft_putstr_fd("Quit (core dumped)\n", 1);
-		exit_status(131, PUSH);
-	}
-}
+	int		fd;
+	char	buffer[3];
+	int		bytes_read;
 
-static void	wait_and_handle_status(pid_t pid)
-{
-	int	status;
-
-	ignore_signal();
-	waitpid(pid, &status, 0);
-	if (WIFEXITED(status))
-		exit_status(WEXITSTATUS(status), PUSH);
-	else if (WIFSIGNALED(status))
-		handle_signal_status(status);
-	init_signal();
+	fd = open(path, O_RDONLY);
+	if (fd == -1)
+		return (0);
+	bytes_read = read(fd, buffer, 2);
+	close(fd);
+	if (bytes_read < 2)
+		return (1);
+	if (buffer[0] == '#' && buffer[1] == '!')
+		return (0);
+	return (1);
 }
 
 static void	handle_child_process(char **args, char *cmd_path, char **env_array)
 {
+	char	*sh_args[3];
+
 	execve_signal();
 	if (execve(cmd_path, args, env_array) == -1)
 	{
-		perror("minishell");
-		cmd_path = NULL;
-		clear_exit(NULL, 126, NULL);
+		if (is_script_file(cmd_path))
+		{
+			sh_args[0] = "/bin/sh";
+			sh_args[1] = cmd_path;
+			sh_args[2] = NULL;
+			if (execve("/bin/sh", sh_args, env_array) == -1)
+			{
+				perror("minishell");
+				clear_exit(NULL, 126, NULL);
+			}
+		}
+		else
+		{
+			perror("minishell");
+			cmd_path = NULL;
+			clear_exit(NULL, 126, NULL);
+		}
 	}
 }
 
@@ -76,6 +83,28 @@ void	execute_external(char **args, t_env *env_list)
 	}
 }
 
+static void	handle_execve_failure(char *cmd_path, char **env_array)
+{
+	char	*sh_args[3];
+
+	if (is_script_file(cmd_path))
+	{
+		sh_args[0] = "/bin/sh";
+		sh_args[1] = cmd_path;
+		sh_args[2] = NULL;
+		if (execve("/bin/sh", sh_args, env_array) == -1)
+		{
+			perror("minishell");
+			clear_exit(NULL, 126, NULL);
+		}
+	}
+	else
+	{
+		perror("minishell");
+		clear_exit(NULL, 126, NULL);
+	}
+}
+
 void	execute_external_piped(char **args, t_env *env_list)
 {
 	char	**env_array;
@@ -92,8 +121,5 @@ void	execute_external_piped(char **args, t_env *env_list)
 	env_array = env_list_to_array(env_list);
 	execve_signal();
 	if (execve(cmd_path, args, env_array) == -1)
-	{
-		perror("minishell");
-		clear_exit(NULL, 126, NULL);
-	}
+		handle_execve_failure(cmd_path, env_array);
 }
