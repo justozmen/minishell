@@ -6,7 +6,7 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/22 14:37:12 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/23 13:20:37 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/23 14:00:15 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ static int	handle_heredoc_input(int fd, char *processed_delimiter,
 		{
 			if (g_heredoc_interrupted)
 			{
+				free(line);
 				ft_malloc(0, CLEAR);
 				exit(130);
 			}
@@ -32,13 +33,9 @@ static int	handle_heredoc_input(int fd, char *processed_delimiter,
 			break ;
 		}
 		if (ft_strcmp(line, processed_delimiter) == 0)
-		{
-			ft_malloc(0, CLEAR);
-			break ;
-		}
+			return (free(line), ft_malloc(0, CLEAR), 0);
 		process_heredoc_line(fd, line, env_list, expand);
 	}
-	free(line);
 	return (0);
 }
 
