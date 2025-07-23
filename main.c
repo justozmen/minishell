@@ -6,7 +6,7 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/04 12:29:43 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/23 12:57:06 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/23 14:25:11 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,15 +56,10 @@ static void	check_exit(char *input, t_main *shell)
 
 static void	check_ac(int ac)
 {
-	return ;
 	if (ac > 1)
-	{
 		clear_exit(NULL, 127, "no arguments please");
-	}
 	if (!isatty(STDIN_FILENO))
-	{
 		clear_exit(NULL, 1, "use terminal please");
-	}
 }
 
 int	main(int ac, char **av, char **env)
