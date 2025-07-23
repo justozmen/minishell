@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute_external.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
+/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 12:36:36 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/22 18:00:58 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/22 20:08:48 by mecavus          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ static void	handle_signal_status(int status)
 	}
 }
 
-void	wait_and_handle_status(pid_t pid)
+static void	wait_and_handle_status(pid_t pid)
 {
 	int	status;
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   heredoc_utils.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
+/*   By: mecavus <mecavus@student.42kocaeli.com.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 16:23:07 by mecavus           #+#    #+#             */
-/*   Updated: 2025/07/22 15:07:22 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/22 20:19:50 by mecavus          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,6 @@ int	process_heredoc_line(int fd, char *line,
 	write(fd, "\n", 1);
 	return (0);
 }
-typedef struct s_delimiter_state
-{
-	int	s_quot;
-	int	d_quot;
-	int	i;
-}	t_delimiter_state;
 
 static char	*handle_quote_in_delimiter(char *result, char *delimiter,
 				t_delimiter_state *state)

@@ -6,7 +6,7 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/04 12:29:43 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/22 19:22:04 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/23 12:57:06 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,6 @@ void	clear_exit(t_main *shell, int exit_code, char *message)
 
 static void	check_exit(char *input, t_main *shell)
 {
-	g_heredoc_interrupted = 0;
 	if (!input)
 	{
 		ft_putstr_fd("exit\n", 1);
@@ -96,7 +95,3 @@ int	main(int ac, char **av, char **env)
 			execute_piped_commands(shell.cmd_list, shell.env_list);
 	}
 }
-//echo "Test '"|"cat" -> Test '
-//"e"'c'"h"'o' a -> " a" olmayacak a olacak boşluksuz
-//exit a 5 -> numeric argument required
-//exit "                        5             " -> 5 olarak çıkış yapması gerek

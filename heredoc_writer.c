@@ -6,7 +6,7 @@
 /*   By: emrozmen <emrozmen@student.42kocaeli.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/22 14:37:12 by emrozmen          #+#    #+#             */
-/*   Updated: 2025/07/22 18:04:03 by emrozmen         ###   ########.fr       */
+/*   Updated: 2025/07/23 13:20:37 by emrozmen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,17 +27,18 @@ static int	handle_heredoc_input(int fd, char *processed_delimiter,
 				ft_malloc(0, CLEAR);
 				exit(130);
 			}
+			if (!line)
+				heredoc_putstr(processed_delimiter);
 			break ;
 		}
 		if (ft_strcmp(line, processed_delimiter) == 0)
 		{
-			free(line);
 			ft_malloc(0, CLEAR);
 			break ;
 		}
 		process_heredoc_line(fd, line, env_list, expand);
-		free(line);
 	}
+	free(line);
 	return (0);
 }
 
@@ -59,7 +60,7 @@ static int	write_heredoc_parent(pid_t pid, int fd, char *filename)
 {
 	int	status;
 
-	signal(SIGINT, SIG_IGN);
+	ignore_signal();
 	close(fd);
 	waitpid(pid, &status, 0);
 	init_signal();
@@ -78,7 +79,7 @@ static int	write_heredoc_parent(pid_t pid, int fd, char *filename)
 	return (0);
 }
 
-static int	write_heredoc_to_file(char *filename, char *delimiter,
+int	write_heredoc_to_file(char *filename, char *delimiter,
 			t_env *env_list, int expand)
 {
 	int		fd;
